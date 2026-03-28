@@ -35,4 +35,13 @@ docker build -t sq-decoder -f docker/Dockerfile .
 
 # Run the decoder bridge
 ./run.sh# SQ-Tools
-Vintage SQ kavrofonic audio is coming back to life.
+
+
+📝 Roadmap (To-Do)
+[ ] QS Matrix: Implementation of the Sansui QS decoding matrix.
+
+[ ] Direct USB Turntable Support: Optimization for turntables with built-in USB outputs.
+
+[ ] Advanced De-Clicker: Real-time digital impulse noise reduction to clean up vintage vinyl pops without affecting transients.
+
+[ ] Offline DTS-CD Converter: A tool to transcode 5.1 DTS-CD ISOs into SQ-encoded Stereo for recording onto analog Reel-to-Reel or Cassette tapes.
