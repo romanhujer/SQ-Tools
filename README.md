@@ -7,7 +7,7 @@ In the 1970s, engineers aimed to place the listener in the center of the music. 
 
 * **SQ (Stereo Quadraphonic):** Developed by CBS. It uses 90° phase-shifts to "hide" four channels within two stereo tracks. This is our primary target.
 * **QS (Regular Matrix):** Sansui's competing system. Similar to SQ but uses a different mixing matrix for channel distribution.
-* **CD-4 (Compatible Discrete 4):** A discrete system by JVC. 
+* **CD-4 (Compatible Discrete 4):** A discrete system by JVC and RCA. 
     > **⚠️ The CD-4 Challenge:** Unlike matrix systems, CD-4 is nearly impossible to decode reliably today. It requires specialized phono cartridges capable of tracking up to 50 kHz (for the subcarrier) and ultra-low capacitance cables. Most vintage discs have suffered groove wear that destroys the high-frequency carrier.
 
 ## 🚀 Our Solution: SQ on Raspberry Pi 5
@@ -42,6 +42,6 @@ docker build -t sq-decoder -f docker/Dockerfile .
 
 * Direct USB Turntable Support: Optimization for turntables with built-in USB outputs.
 
-*  Advanced De-Clicker: Real-time digital impulse noise reduction to clean up vintage vinyl pops without affecting transients.
+* Advanced De-Clicker: Real-time digital impulse noise reduction to clean up vintage vinyl pops without affecting transients.
 
 * Offline DTS-CD Converter: A tool to transcode 5.1 DTS-CD ISOs into SQ-encoded Stereo for recording onto analog Reel-to-Reel or Cassette tapes.

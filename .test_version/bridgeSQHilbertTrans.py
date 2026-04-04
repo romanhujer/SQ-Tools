@@ -2,7 +2,7 @@ import sounddevice as sd
 import numpy as np
 from scipy.signal import hilbert
 import time
-
+ 
 INPUT_DEV = 1   # SBX
 OUTPUT_DEV = 5  # ONKYO (8-ch HDMI)
 
@@ -27,7 +27,7 @@ def callback(indata, outdata, frames, time_info, status):
     # Zadní kanály (fázová magie)
     # Koeficient 0.707 odpovídá -3dB pro zachování energie
     bl = (-0.707 * L_shifted) + (0.707 * R)
-    br = (0.707 * L) - (0.707 * R_shifted)
+    br = (0.707 * L) - (0.707 * R_shifted) 
 
     # 4. Mapování na 8-kanálový HDMI výstup Onkya
     # Standardní HDMI layout: 0:FL, 1:FR, 2:FC, 3:LFE, 4:BL, 5:BR...

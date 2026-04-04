@@ -1,0 +1,18 @@
+[Unit]
+Description=QuadDSP Audio Engine Daemon
+After=network-online.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/storage/myapp
+ExecStartPre=/usr/bin/sleep 10
+ExecStart=/usr/bin/sh /storage/myapp/rund.sh
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# TOTO JE KLÍČOVÉ - říká to "spusť mě s Kodi"
+WantedBy=kodi.target

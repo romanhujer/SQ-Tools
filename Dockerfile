@@ -23,8 +23,8 @@ WORKDIR /app
 
 # 4. Kopírování skriptu do kontejneru
 # Předpokládám, že bridge.py máš ve složce audio-bridge
-COPY audio-bridge/bridge.py .
+COPY quadproc/quadDSP.py .
 
-# 5. Spuštění bridge.py
+# 5. Spuštění .py
 # Používáme -u (unbuffered), aby se výpisy v Dockeru zobrazovaly okamžitě
-CMD ["python", "-u", "bridge.py"]
+CMD ["python", "-u", "quadDSP.py"]

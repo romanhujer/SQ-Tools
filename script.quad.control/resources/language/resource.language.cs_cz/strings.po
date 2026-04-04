@@ -1,0 +1,90 @@
+#Kodi Strings for Quad Control - Czech
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgctxt "#30000"
+msgid "Quad Control"
+msgstr "Kvadrofonní Ovládání"
+
+msgctxt "#30001"
+msgid "SQ Mode"
+msgstr "Režim: SQ (CBS)"
+
+msgctxt "#30002"
+msgid "QS Mode"
+msgstr "Režim: QS (Sansui)"
+
+msgctxt "#30003"
+msgid "Matrix H"
+msgstr "Režim: Matrix H (BBC)"
+
+msgctxt "#30004"
+msgid "Stereo-4"
+msgstr "Režim: Stereo-4 (Dynaquad)"
+
+msgctxt "#30005"
+msgid "Dolby Stereo"
+msgstr "Režim: Dolby Stereo (Dolby Surround)"
+
+msgctxt "#30006"
+msgid "Dolby PL2"
+msgstr "Režim: Dolby Prologic II"
+
+msgctxt "#30009"
+msgid "Bypass 4ch"
+msgstr "Režim: Bypass 4:4 pro externí dekoder"
+
+msgctxt "#30010"
+msgid "Stereo"
+msgstr "Režim: Stereo"
+
+msgctxt "#30101"
+msgid "44100Hz"
+msgstr "Vzorkování: 44.1kHz"
+
+msgctxt "#30102"
+msgid "48000Hz"
+msgstr "Vzorkování: 48kHz"
+
+msgctxt "#30103"
+msgid "96000Hz"
+msgstr "Vzorkování: 96kHz"
+
+msgctxt "#30104"
+msgid "192000Hz"
+msgstr "Vzorkování: 192kHz"
+
+msgctxt "#30201"
+msgid "16bit"
+msgstr "Kodovaní: 16bit"
+
+msgctxt "#30202"
+msgid "24bit"
+msgstr "Kodovaní: 24bit"
+
+sgctxt "#30301"
+msgid "Center Toggle" 
+msgstr "Center: ZAP/VYP"
+
+msgctxt "#30302"
+msgid "Filter Toggle"
+msgstr "Filtr praskání: ZAP/VYP (experimental)"
+
+
+msgctxt "#30401"
+msgid "DSP Start"
+msgstr "DSP Start"
+
+msgctxt "#30402"
+msgid "DSP Stop"
+msgstr "DSP Stop"
+
+msgctxt "#30408"
+msgid "Current: %s"
+msgstr "Aktuálně: %s"
+
+msgctxt "#30409"
+msgid "Offline"
+msgstr "Engine neběží"
