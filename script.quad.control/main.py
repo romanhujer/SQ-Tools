@@ -77,8 +77,8 @@ def run():
         get_s(30201), # 16bit
         get_s(30202), # 24bit
 
-        get_s(30301), # Center ON/OFF
-        get_s(30302), # De-clicker ON/OFF
+        get_s(30501), # Center ON/OFF
+        get_s(30502), # De-clicker ON/OFF
         
         get_s(30401), # DSP Start
         get_s(30402), # DSP Stop 

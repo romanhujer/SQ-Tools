@@ -64,15 +64,6 @@ msgctxt "#30202"
 msgid "24bit"
 msgstr "Kodovaní: 24bit"
 
-sgctxt "#30301"
-msgid "Center Toggle" 
-msgstr "Center: ZAP/VYP"
-
-msgctxt "#30302"
-msgid "Filter Toggle"
-msgstr "Filtr praskání: ZAP/VYP (experimental)"
-
-
 msgctxt "#30401"
 msgid "DSP Start"
 msgstr "DSP Start"
@@ -88,3 +79,12 @@ msgstr "Aktuálně: %s"
 msgctxt "#30409"
 msgid "Offline"
 msgstr "Engine neběží"
+
+msgctxt "#30501"
+msgid "Toggle Center"
+msgstr "Center: ZAP/VYP"
+
+msgctxt "#30502"
+msgid "Toggle Filter"
+msgstr "Filtr praskání: ZAP/VYP"
+
