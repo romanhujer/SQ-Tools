@@ -1,6 +1,6 @@
 # Python
 __pycache__/
-note.text
+note*.txt
 test*.py
 tmp*.py
 *.py[cod]
@@ -8,8 +8,9 @@ tmp*.py
 *.so
 .Python
 env/
-build/
+test*/
 develop-eggs/
+develop-test/
 dist/
 downloads/
 eggs/
