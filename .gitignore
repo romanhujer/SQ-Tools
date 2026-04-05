@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+.vscode/
 note*.txt
 test*.py
 tmp*.py
@@ -24,7 +25,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.vscode/
 
 # Virtual Environment
 venv/
