@@ -39,9 +39,10 @@ import subprocess
 import argparse
 
 # --- KONFIGURACE ---
-VERSION = "1.8.6"
-
-# Nastavíme úvodni indexy 
+VERSION = "1.8.5"
+# DEFAULT_INPUT = 1   # Behringer UMC404HD    
+# DEFAULT_OUTPUT = 2  # HDMI
+# Nastavíme indexy napevno, aby se to nepletlo
 INPUT_DEV = 'hw:1,0'  # Behringer UMC404HD
 OUTPUT_DEV = 'hw:2,3' # Onkyo TX-NR626 
 
@@ -73,6 +74,7 @@ QS_B = np.sin(QS_ANGLE)         # ~0.3827
 MH_ANGLE = deg2rad(20.0)
 MH_A = np.cos(MH_ANGLE)         # ~0.9397
 MH_B = np.sin(MH_ANGLE)         # ~0.3420
+
 
 FL = 0      # Front L
 FR = 1      # Front R
@@ -419,7 +421,7 @@ try:
                 # Zápis pro Kodi (to chceme vždycky)
                 try:
                     with open(STATUS_FILE, "w") as f:
-                        f.write(f"{status_msg}|{mode.upper()}|{current_sr//1000}k|{bit_depth}|{f_stat}|{c_stat}")
+                        f.write(f"{status_msg}|{mode.upper()}|{current_sr//1000}k|{bit_depth}|{total_clicks}|{f_stat}|{c_stat}")
                 except Exception:
                     pass 
             last_status_time = current_time
@@ -443,15 +445,16 @@ try:
                 commands = content.split()
                 for cmd in commands:
                     # Logika příkazů (Sampling, Mode atd.)
-                    if cmd in ['1', 'sr:44100']: current_sr = 44100; start_engine()
-                    elif cmd in ['2', 'sr:48000']: current_sr = 48000; start_engine()
-                    elif cmd in ['3', 'sr:96000']: current_sr = 96000; start_engine()
-                    elif cmd in ['4', 'sr:192000']: current_sr = 192000; start_engine() 
-                    elif cmd in ['7', 'bit:16']: current_dtype = 'int16'; start_engine()
-                    elif cmd in ['8', 'bit:24']: current_dtype = 'int32'; start_engine()
+                    if cmd == '1': current_sr = 44100; start_engine()
+                    elif cmd == '2': current_sr = 48000; start_engine()
+                    elif cmd == '3': current_sr = 96000; start_engine()
+                    elif cmd == '4': current_sr = 192000; start_engine() 
+                    elif cmd == '7': current_dtype = 'int16'; start_engine()
+                    elif cmd == '8': current_dtype = 'int32'; start_engine()
                     elif cmd.startswith('mode:'):
                         mode = cmd.split(':')[1]
                         # start_engine() #pokud stream neběží
+
                     # Režimy matic
                     elif cmd in ['q', 'mode:sq']: mode = "sq"
                     elif cmd in ['x', 'mode:qs']: mode = "qs"
@@ -461,6 +464,7 @@ try:
                     elif cmd in ['h', 'mode:matrixh']: mode = "matrixh"
                     elif cmd in ['f', 'mode:stereo4']: mode = "stereo4" 
                     elif cmd in ['b', 'mode:bypass']: mode = "bypass" 
+                    
                     # Nastavení
                     elif cmd in ['n', 'toggle:filter']: enabled_filter = not enabled_filter
                     elif cmd in ['c', 'toggle:center']: enabled_center = not enabled_center
@@ -486,6 +490,7 @@ try:
                         stop_engine()
                     elif line == 'q': mode = "sq"
                     elif line == 'x': mode = "qs"
+                    elif line == 's': mode = "stereo"
                     elif line == 's': mode = "stereo"
                     elif line == 'd': mode = "dolby"
                     elif line == 'p': mode = "pl2"

@@ -13,6 +13,9 @@ until docker ps >/dev/null 2>&1; do
   sleep 2
 done
 
+echo ">>> Zastavuji starý proces pokud běží..."
+docker stop quuad_processor 2>/dev/null
+
 echo ">>> Čištění starých kontejnerů..."
 docker rm -f quad_dsp >/dev/null 2>&1
 

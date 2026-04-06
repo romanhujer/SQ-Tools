@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgctxt "#30000"
-msgid "Quad Control"
-msgstr "Kvadrofonní Ovládání"
+msgid "Quadraphonic"
+msgstr "Kvadrofonní"
 
 msgctxt "#30001"
 msgid "SQ Mode"
@@ -72,6 +72,14 @@ msgctxt "#30402"
 msgid "DSP Stop"
 msgstr "DSP Stop"
 
+msgctxt "#30403"
+msgid "DSP runnig"
+msgstr "DSP běží"
+
+msgctxt "#30404"
+msgid "DSP stoped"
+msgstr "DSP zastaven"
+
 msgctxt "#30408"
 msgid "Current: %s"
 msgstr "Aktuálně: %s"
@@ -88,3 +96,10 @@ msgctxt "#30502"
 msgid "Toggle Filter"
 msgstr "Filtr praskání: ZAP/VYP"
 
+msgctxt "#30503"
+msgid "Center active"
+msgstr "Center: Aktivní"
+
+msgctxt "#30504"
+msgid "Filter active"
+msgstr "Filtr: Aktivní"

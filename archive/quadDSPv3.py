@@ -39,9 +39,10 @@ import subprocess
 import argparse
 
 # --- KONFIGURACE ---
-VERSION = "1.8.6"
-
-# Nastavíme úvodni indexy 
+VERSION = "1.8.1"
+# DEFAULT_INPUT = 1   # Behringer UMC404HD    
+# DEFAULT_OUTPUT = 2  # HDMI
+# Nastavíme indexy napevno, aby se to nepletlo
 INPUT_DEV = 'hw:1,0'  # Behringer UMC404HD
 OUTPUT_DEV = 'hw:2,3' # Onkyo TX-NR626 
 
@@ -74,6 +75,7 @@ MH_ANGLE = deg2rad(20.0)
 MH_A = np.cos(MH_ANGLE)         # ~0.9397
 MH_B = np.sin(MH_ANGLE)         # ~0.3420
 
+
 FL = 0      # Front L
 FR = 1      # Front R
 RL = 2      # Rear L - RPi 4 | N150 2
@@ -96,6 +98,10 @@ total_clicks = 0
 peak_hold = 0.0
 last_status_time = 0
 enabled_center = False
+
+
+
+
 
 def find_audio_devices():
     import sounddevice as sd
@@ -366,16 +372,25 @@ def print_menu():
     print(f"  NASTAVENÍ:  [c] CENTER:{c_stat:3}  | [n] FILTR:{f_stat:3} | [r] Reset Clicks | [e] Exit")
     print("="*78)    
 
-def stop_engine():
+
+#####  Jina verze
+def main_loop():
     global stream
-    if stream is not None:
-        try:
-            stream.stop()
-            stream.close()
-            stream = None
-            print(">>> Engine uvolnil HDMI (IDLE).")
-        except:
-            pass
+    while True:
+        # Čtení /tmp/quad_cmd
+        if os.path.exists('/tmp/quad_cmd'):
+            with open('/tmp/quad_cmd', 'r') as f:
+                cmd = f.read().strip()
+            os.remove('/tmp/quad_cmd')
+
+            if cmd == 'stop':
+                if stream:
+                    stream.stop(); stream.close(); stream = None
+            elif cmd.startswith('mode:'):
+                # Nastav mód a pokud engine stojí, nahoď ho
+                mode = cmd.split(':')[1]
+                if not stream:
+                    start_engine()
 
 
 # --- HLAVNÍ BĚH ---
@@ -384,6 +399,8 @@ INPUT_DEV, OUTPUT_DEV = find_audio_devices()
 init_hw_mixer()
 devices = sd.query_devices()
 
+start_engine()
+
 # --- PŘÍPRAVA PŘED SMYČKOU ---
 CMD_FILE = "/tmp/quad_cmd"
 STATUS_FILE = "/tmp/quad_status"
@@ -391,67 +408,56 @@ last_status_time = 0  # Časovač pro zápis na disk
 peak_hold = 0.0
 current_max_in = 0.0
 
-# --- START LOGIKY ---
+
 if not IS_DAEMON:
-    # V terminálu startujeme rovnou
-    start_engine()
     print_menu()
 
 
 try:
     while True:
         current_time = time.time()
-         # 1. ZÁPIS STATUSU (pro Kodi)
-        if current_time - last_status_time > 0.5:
-            status_msg = "RUN" if stream else "STOP"
 
-            # 1. AKTUALIZACE STATUSU (každých 500ms)
-            if current_time - last_status_time > 0.5:
-                f_stat = "ON" if enabled_filter else "OFF"
-                c_stat = "ON" if enabled_center else "OFF"
-                bit_depth = "24b" if current_dtype == 'int32' else "16b"
+        # 1. AKTUALIZACE STATUSU (každých 500ms)
+        if current_time - last_status_time > 0.5:
+            f_stat = "ON" if enabled_filter else "OFF"
+            c_stat = "ON" if enabled_center else "OFF"
+            bit_depth = "24b" if current_dtype == 'int32' else "16b"
             
-                # Výpis do konzole jen pokud nejsme daemon
-                if not IS_DAEMON:
-                    sys.stdout.write(f"\r STATUS: [{mode.upper()}] {current_sr//1000}k/{bit_depth} | Filter:{f_stat} | Clicks:{total_clicks} | Center:{c_stat}    ")
-                    sys.stdout.flush()
+            # Výpis do konzole jen pokud nejsme daemon
+            if not IS_DAEMON:
+                sys.stdout.write(f"\r STATUS: [{mode.upper()}] {current_sr//1000}k/{bit_depth} | Filter:{f_stat} | Clicks:{total_clicks} | Center:{c_stat}    ")
+                sys.stdout.flush()
             
-                # Zápis pro Kodi (to chceme vždycky)
-                try:
-                    with open(STATUS_FILE, "w") as f:
-                        f.write(f"{status_msg}|{mode.upper()}|{current_sr//1000}k|{bit_depth}|{f_stat}|{c_stat}")
-                except Exception:
-                    pass 
+            # Zápis pro Kodi (to chceme vždycky)
+            try:
+                with open(STATUS_FILE, "w") as f:
+                    f.write(f"{mode.upper()}|{current_sr//1000}k|{bit_depth}|{total_clicks}|{f_stat}|{c_stat}")
+            except Exception:
+                pass 
             last_status_time = current_time
 
         # 2. KONTROLA SOUBORU (Příkazy z Kodi /tmp/quad_cmd)
         # Tato část funguje v obou režimech
         if os.path.exists(CMD_FILE):
-            with open(CMD_FILE, "r") as f:
-                content = f.read().strip().lower()
-            os.remove(CMD_FILE)
-            
-            if content == 'dsp:start' or content == 'r':
-                if not stream: start_engine()
-            elif content == 'dsp:stop':
-                stop_engine()
-            elif content == 'e':
-                break
-            elif stream: # Ostatní příkazy (matice atd.) zpracuj jen když běží stream
-                # ... tvoje elif cmd == 'q' atd ...
-                               
+            try:
+                with open(CMD_FILE, "r") as f:
+                    content = f.read().strip().lower()
+                os.remove(CMD_FILE)
+                
                 commands = content.split()
                 for cmd in commands:
                     # Logika příkazů (Sampling, Mode atd.)
-                    if cmd in ['1', 'sr:44100']: current_sr = 44100; start_engine()
-                    elif cmd in ['2', 'sr:48000']: current_sr = 48000; start_engine()
-                    elif cmd in ['3', 'sr:96000']: current_sr = 96000; start_engine()
-                    elif cmd in ['4', 'sr:192000']: current_sr = 192000; start_engine() 
-                    elif cmd in ['7', 'bit:16']: current_dtype = 'int16'; start_engine()
-                    elif cmd in ['8', 'bit:24']: current_dtype = 'int32'; start_engine()
+                    if cmd == '1': current_sr = 44100; start_engine()
+                    elif cmd == '2': current_sr = 48000; start_engine()
+                    elif cmd == '3': current_sr = 96000; start_engine()
+                    elif cmd == '4': current_sr = 192000; start_engine() 
+                    elif cmd == '7': current_dtype = 'int16'; start_engine()
+                    elif cmd == '8': current_dtype = 'int32'; start_engine()
                     elif cmd.startswith('mode:'):
                         mode = cmd.split(':')[1]
-                        # start_engine() #pokud stream neběží
+                        etart_engine() #pokud stream neběží
+
+
                     # Režimy matic
                     elif cmd in ['q', 'mode:sq']: mode = "sq"
                     elif cmd in ['x', 'mode:qs']: mode = "qs"
@@ -461,16 +467,18 @@ try:
                     elif cmd in ['h', 'mode:matrixh']: mode = "matrixh"
                     elif cmd in ['f', 'mode:stereo4']: mode = "stereo4" 
                     elif cmd in ['b', 'mode:bypass']: mode = "bypass" 
+                    
                     # Nastavení
                     elif cmd in ['n', 'toggle:filter']: enabled_filter = not enabled_filter
                     elif cmd in ['c', 'toggle:center']: enabled_center = not enabled_center
                     elif cmd == 'r': total_clicks = 0
                    
-                    # elif cmd == 'e': raise KeyboardInterrupt
-                 
+                    elif cmd == 'e': raise KeyboardInterrupt
+                
                 if not IS_DAEMON:
                     print_menu()
-                pass    
+            except Exception as e:
+                if not IS_DAEMON: print(f"\nChyba příkazu: {e}")
 
         # 3. KONTROLA KLÁVESNICE - TOTO JE TA ZMĚNA
         # Spustí se POUZE v interaktivním režimu (--terminal)
@@ -480,12 +488,9 @@ try:
             if r:
                 line = sys.stdin.readline().strip().lower()
                 if line:
-                    if line == 'r': # Manuální restart/start
-                        if not stream: start_engine()
-                    elif line == 'dsp:stop':
-                        stop_engine()
-                    elif line == 'q': mode = "sq"
+                    if line == 'q': mode = "sq"
                     elif line == 'x': mode = "qs"
+                    elif line == 's': mode = "stereo"
                     elif line == 's': mode = "stereo"
                     elif line == 'd': mode = "dolby"
                     elif line == 'p': mode = "pl2"
@@ -510,8 +515,9 @@ try:
                     print_menu()
 
         # 4. PAUZA
-        time.sleep(0.1)
+        time.sleep(0.05)
 
-finally:
-    stop_engine()
-    sys.exit(0)
+except KeyboardInterrupt:
+    if not IS_DAEMON: 
+        print("\n>>> Ukončování...")
+        sys.exit(0)
