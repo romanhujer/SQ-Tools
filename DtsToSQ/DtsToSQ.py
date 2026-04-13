@@ -1,50 +1,93 @@
-#  
-#
-# Architektura offline konvertoru (DTS 5.1 -> SQ Stereo)
-# Abychom z DTS udělali SQ, musíme provést opačný proces než v našem bridge skriptu:
-#
-# Dekódování DTS: Rozbalit .wav (DTS-CD) na 6 samostatných stop (FL, FR, C, LFE, SL, SR).
-#
-# SQ Encoding Matrix:
-#
-# L total =FL+0.707⋅SL−0.707j⋅SR
-#
-# R Total =FR+0.707⋅SR+0.707j⋅SL
-# (Opět tam figuruje ten 90° fázový posun j, aby to SQ dekodér pak správně rozpoznal).
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import soundfile as sf
 from scipy.signal import hilbert
+import os
 
-def create_sq_from_dts(input_file, output_file):
-    # 1. Načtení multikanálového souboru (předpokládáme už rozbalené DTS do WAV)
-    data, samplerate = sf.read(input_file)
+# --- KONSTANTY A KOEFICIENTY ---
+SQRT1_2 = np.sqrt(0.5)      # 0.707
+SQRT3_2 = np.sqrt(3) / 2    # 0.866
+HALF    = 0.5               # 0.5
+
+def deg2rad(deg): return deg * (np.pi / 180.0)
+
+# QS (Sansui)
+QS_A = np.cos(deg2rad(22.5)) # 0.924
+QS_B = np.sin(deg2rad(22.5)) # 0.383
+
+# Matrix H (BBC)
+MH_A = np.cos(deg2rad(20.0)) # 0.940
+MH_B = np.sin(deg2rad(20.0)) # 0.342
+
+def create_matrix_from_6ch(input_file, output_file, mode='SQ'):
+    if not os.path.exists(input_file):
+        print(f"Chyba: Soubor {input_file} neexistuje!")
+        return
+
+    info = sf.info(input_file)
+    samplerate = info.samplerate
+    total_frames = info.frames
+    block_size = samplerate * 10 
     
-    # Mapování kanálů (standardní 5.1: 0:FL, 1:FR, 2:C, 4:SL, 5:SR)
-    fl = data[:, 0]
-    fr = data[:, 1]
-    sl = data[:, 4]
-    sr = data[:, 5]
+    print(f"Režim: {mode} | Zpracovávám {info.duration:.2f} s")
 
-    # 2. Hilbertova transformace pro 90° posun zadních kanálů
-    sl_90 = np.imag(hilbert(sl))
-    sr_90 = np.imag(hilbert(sr))
+    with sf.SoundFile(input_file) as infile, \
+         sf.SoundFile(output_file, mode='w', samplerate=samplerate, channels=2) as outfile:
+        
+        progress = 0
+        for block in infile.blocks(blocksize=block_size):
+            if block.shape[1] < 6: continue
+            
+            fl, fr, c, lfe, sl, sr = block[:,0], block[:,1], block[:,2], block[:,3], block[:,4], block[:,5]
 
-    # 3. SQ Encoding Matice (Standardní CBS SQ parametry)
-    # L_total = FL - 0.707 * SL_90 + 0.707 * SR
-    # R_total = FR + 0.707 * SR_90 - 0.707 * SL
-    lt = fl - (0.707 * sl_90) + (0.707 * sr)
-    rt = fr + (0.707 * sr_90) - (0.707 * sl)
+            # Hilbert pro fázové posuny
+            sl_90 = np.imag(hilbert(sl))
+            sr_90 = np.imag(hilbert(sr))
 
-    # 4. Normalizace, aby nedošlo k ořezu (clipping) při sčítání
-    output = np.vstack((lt, rt)).T
-    max_val = np.max(np.abs(output))
-    if max_val > 1.0:
-        output /= max_val
+            # --- MATICOVÉ VÝPOČTY ---
+            if mode == 'SQ':
+                # CBS SQ Matice
+                lt = fl + (c * SQRT1_2) - (sl_90 * SQRT1_2) + (sr * SQRT1_2)
+                rt = fr + (c * SQRT1_2) + (sr_90 * SQRT1_2) - (sl * SQRT1_2)
 
-    # 5. Uložení jako Stereo WAV pro nahrání na pás
-    sf.write(output_file, output, samplerate)
-    print(f"Hotovo! SQ Stereo uloženo do {output_file}")
+            elif mode == 'QS':
+                # Sansui QS Matice (přední 22.5°, zadní 22.5°)
+                lt = (fl * QS_A) + (fr * QS_B) + (c * SQRT1_2) - (sl_90 * QS_A) + (sr_90 * QS_B)
+                rt = (fr * QS_A) + (fl * QS_B) + (c * SQRT1_2) + (sr_90 * QS_A) - (sl_90 * QS_B)
 
-# Použití: create_sq_from_dts('multich_file.wav', 'tape_ready_sq.wav')
+            elif mode == 'MH':
+                # BBC Matrix H
+                lt = (fl * MH_A) + (fr * MH_B) + (c * SQRT1_2) - (sl_90 * MH_A) + (sr_90 * MH_B)
+                rt = (fr * MH_A) + (fl * MH_B) + (c * SQRT1_2) + (sr_90 * MH_A) - (sl_90 * MH_B)
+
+            elif mode == 'PL2':
+                # Dolby Pro Logic II (Surround jsou posunuty o -90° a míchány specificky)
+                # Lt = L + 0.707*C - 0.866*SL_90 - 0.5*SR_90
+                # Rt = R + 0.707*C + 0.5*SL_90 + 0.866*SR_90
+                lt = fl + (c * SQRT1_2) - (sl_90 * SQRT3_2) - (sr_90 * HALF)
+                rt = fr + (c * SQRT1_2) + (sl_90 * HALF) + (sr_90 * SQRT3_2)
+            
+            else:
+                print("Neznámý režim!"); return
+
+            # Sestavení sterea a zápis
+            stereo_block = np.vstack((lt, rt)).T
+            
+            # Ochrana proti clippingu (špičková normalizace na blok)
+            max_b = np.max(np.abs(stereo_block))
+            if max_b > 0.99:
+                stereo_block = stereo_block / max_b * 0.95
+
+            outfile.write(stereo_block)
+            
+            progress += len(block)
+            percent = (progress / total_frames) * 100
+            print(f"\rPostup: {percent:.1f} %", end='', flush=True)
+
+    print(f"\nHotovo! Režim {mode} uložen.")
+
+if __name__ == "__main__":
+    # Tady si zvol, co chceš vyrobit: 'SQ', 'QS', 'MATRIXH' nebo 'PL2'
+    create_matrix_from_6ch('tmp_processing/multichannel.wav', 'tmp_processing/master_sq.wav', mode='MH')

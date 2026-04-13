@@ -1,0 +1,22 @@
+<window type="dialog">
+    <controls>
+        <control type="image">
+            <texture border="20">DialogFront.png</texture>
+        </control>
+
+        <control type="list" id="3">
+            <left>20</left>
+            <top>60</top>
+            <width>600</width>
+            <height>400</height>
+            <onright>10</onright> </control>
+
+        <control type="button" id="10">
+            <left>640</left> <top>60</top>
+            <width>200</width>
+            <height>100</height>
+            <label>Start/Stop</label>
+            <onleft>3</onleft> <font>font13</font>
+        </control>
+    </controls>
+</window>

@@ -27,6 +27,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
+
+
+
 import xbmcgui
 import xbmcaddon
 import os
@@ -45,6 +48,54 @@ matrix = {
     "STEREO"   : "Stereo"
 }   
 
+
+
+
+class QuadControl(xbmcgui.WindowXMLDialog):
+    def __init__(self, *args, **kwargs):
+        # Načtení dat předaných z funkce run()
+        self.options = kwargs.get('options', [])
+        self.cmds = kwargs.get('cmds', {})
+
+    def onInit(self):
+        # 1. Titulek (ID 1 v XML)
+        self.getControl(1).setLabel(get_current_info())
+        
+        # 2. Seznam vlevo (ID 3 v XML)
+        self.list_ctl = self.getControl(3)
+        for item in self.options:
+            self.list_ctl.addItem(xbmcgui.ListItem(item))
+        
+        # 3. Boční tlačítko START/STOP (ID 10 v XML)
+        self.update_button_label()
+        self.setFocus(self.list_ctl)
+
+    def update_button_label(self):
+        status = get_current_info()
+        label = "STOP ENGINE" if "RUN" in status or "BĚŽÍ" in status else "START ENGINE"
+        self.getControl(10).setLabel(label)
+
+    def onClick(self, controlId):
+        # Klik na boční tlačítko Start/Stop (ID 10)
+        if controlId == 10:
+            status = get_current_info()
+            cmd = "dsp:stop" if "RUN" in status or "BĚŽÍ" in status else "dsp:start"
+            self.send_cmd(cmd)
+            
+        # Klik na položku v seznamu (ID 3)
+        elif controlId == 3:
+            sel = self.list_ctl.getSelectedPosition()
+            if sel in self.cmds:
+                self.send_cmd(self.cmds[sel])
+
+    def send_cmd(self, cmd):
+        try:
+            with open(CMD_FILE, 'w') as f:
+                f.write(cmd)
+            xbmc.sleep(600)
+            self.close() # Zavře okno a v run() se díky loopu znovu otevře
+        except:
+            self.close()
 
 
 def get_s(string_id):
@@ -143,7 +194,7 @@ def run():
                     # Krátká pauza pro engine a refresh menu
                     xbmc.sleep(600)      
                     # Následujíc trvají déle zdůvodu restartu streamu v DSP
-                    if  cmds[sel] in bit_depth or cmds[sel] in sampling_rate or cmds[sel] in ['1', '2', '3','4','7','8']:
+                    if  cmds[sel] in bit_depth or cmds[sel] in sampling_rate or cmds[sel] :
                         xbmc.sleep(2000)
                     run()    
             except Exception as e:
@@ -151,6 +202,56 @@ def run():
         else:
             # Kliknuto na oddělovač (---), prostě obnovíme menu
             run()
+
+if __name__ == '__main__':
+    run()
+
+
+
+    import xbmcgui
+import xbmcaddon
+import os
+import xbmc
+
+# Definice souborů
+STATUS_FILE = '/tmp/quad_status'
+CMD_FILE = '/tmp/quad_cmd'
+
+def get_s(string_id):
+    try:
+        return xbmcaddon.Addon().getLocalizedString(string_id)
+    except:
+        return str(string_id)
+
+def get_current_info():
+    if os.path.exists(STATUS_FILE):
+        try:
+            with open(STATUS_FILE, 'r') as f:
+                s = f.read().strip().split('|')
+                # s[0]=RUN/STOP, s[1]=MODE, s[2]=SR, s[3]=BIT
+                status_txt = get_s(30403) if s[0] == "RUN" else get_s(30404)
+                return f"{status_txt}: {s[1]} ({s[2]}/{s[3]})"
+        except: pass
+    return get_s(30409)
+
+
+def run():
+    addon = xbmcaddon.Addon()
+    path = addon.getAddonInfo('path')
+    
+    # Definice obsahu (indexy musí sedět s tvým výběrem)
+    options = [get_s(30001), get_s(30002), get_s(30003), get_s(30004), "---", get_s(30201), get_s(30202)]
+    cmds = {0:'mode:sq', 1:'mode:qs', 2:'mode:matrixh', 3:'mode:stereo4', 5:'bit:16', 6:'bit:24'}
+
+    # Spuštění XML okna
+    # "Default", "720p" odpovídá složce resources/skins/Default/720p/
+    wd = QuadControl("script-quad-control.xml", path, "Default", "720p", options=options, cmds=cmds)
+    wd.doModal()
+    del wd
+    
+    # Automatický refresh - pokud okno zavřeme příkazem, hned ho otevřeme s novým statusem
+    # Pokud uživatel stiskne ESC/Back, skript skončí.
+    # (Tady by mohl být cyklus, pokud bys chtěl menu držet otevřené)
 
 if __name__ == '__main__':
     run()
