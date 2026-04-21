@@ -6,12 +6,16 @@ Wants=docker.service
 [Service]
 Type=simple
 WorkingDirectory=/storage/myapp
+# Dáme Dockeru čas na start, ale 10s je možná moc, zkus 5s
 ExecStartPre=/usr/bin/sleep 10
+# Systemd teď přímo vidí běžící docker (protože není v -d)
 ExecStart=/usr/bin/sh /storage/myapp/rund.sh
+# Pokud docker spadne, systemd ho restartuje
 Restart=always
 RestartSec=30
-StandardOutput=journal
-StandardError=journal
+# Při stopnutí systemd korektně pošle signál do rund.sh a ten do Dockeru
+ExecStop=/usr/bin/docker stop quad_dsp
+
 
 [Install]
 # TOTO JE KLÍČOVÉ - říká to "spusť mě s Kodi"

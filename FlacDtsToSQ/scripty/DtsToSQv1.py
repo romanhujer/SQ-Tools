@@ -1,5 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env /Users/hujer/myRec/venv/bin/python3
 # -*- coding: utf-8 -*-
+
+##!/usr/bin/env python3
+## -*- coding: utf-8 -*-
+
 
 import numpy as np
 import soundfile as sf

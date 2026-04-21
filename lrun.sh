@@ -1,7 +1,10 @@
 #!/bin/sh
 
+
 echo ">>> Zastavuji starý proces..."
 systemctl stop quaddsp
+sleep 2
+
 docker stop quuad_processor 2>/dev/null
 
 echo ">>> Sestavuji aktuální verzi (včetně změn v bridge.py)..."
@@ -18,9 +21,11 @@ docker run -it --init --rm \
   --device /dev/snd:/dev/snd \
   --device /dev/dri:/dev/dri \
   -v /tmp:/tmp \
+  -v /storage/recordings:/storage/recordings \
   quadproc:latest \
-  python3 quadDSP.py 
+  python3 quadLiveEncoder.py
 
+sleep 2  
 
 echo ">>> Znova pouštím quadDSP proces..."
 systemctl start quaddsp

@@ -16,14 +16,14 @@ RUN apt-get update && apt-get install -y \
 
 # 2. Instalace Python modulů přímo (bez requirements.txt pro jednoduchost)
 # Scipy potřebujeme pro budoucí Hilbertovu transformaci a De-Clicker
-RUN pip install --no-cache-dir sounddevice numpy scipy
+RUN pip install --no-cache-dir sounddevice numpy scipy soundfile
 
 # 3. Pracovní adresář v kontejneru
 WORKDIR /app
 
 # 4. Kopírování skriptu do kontejneru
 # Předpokládám, že bridge.py máš ve složce audio-bridge
-COPY quadproc/quadDSP.py .
+COPY quadproc/*.py ./
 
 # 5. Spuštění .py
 # Používáme -u (unbuffered), aby se výpisy v Dockeru zobrazovaly okamžitě

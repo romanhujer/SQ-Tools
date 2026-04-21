@@ -4,6 +4,10 @@ __pycache__/
 note*.txt
 test*.py
 tmp*.py
+*.flac
+*.dts
+*.wav
+*.w64
 *.py[cod]
 *$py.class
 *.so

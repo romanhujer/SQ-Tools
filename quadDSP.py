@@ -59,6 +59,8 @@ IS_DAEMON = args.daemon
 def deg2rad(deg):
     return deg * (np.pi / 180.0)
 
+# --- NASTAVENÍ ---
+REAR_GAIN =  0.5   # 0.25 ~  -6dB ,  0.333 ~ -4.7dB,  0.707 ~ -3dB 
 
 SQRT1_2 = np.sqrt(0.5)      # 0.707106... (Standard pro SQ, Center, Stereo-4)
 SQRT3_2 = np.sqrt(3) / 2    # 0.866025... (Pro Logic II)
@@ -291,9 +293,14 @@ def callback(indata, outdata, frames, time_info, status):
         if mode == "bypass" :
             out_6ch[:, RL] =  LS_clean
             out_6ch[:, RR] =  RS_clean
-        
-    # 5. Ochrana a Převod (CLIP JE KLÍČOVÝ)
-    out_6ch = out_6ch * 0.7 # Headroom
+
+    #  Úprava hlasitosti zandích kanalů pokud neni bypass 
+    if mode != "bypass" :
+        out_6ch[:, RL] *= REAR_GAIN
+        out_6ch[:, RR] *= REAR_GAIN
+
+    # Ochrana a Převod (CLIP JE KLÍČOVÝ)
+    out_6ch *= 0.9 # Headroom
     np.clip(out_6ch, -1.0, 1.0, out=out_6ch)
     
     if current_dtype == 'int32':

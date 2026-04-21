@@ -23,7 +23,7 @@ echo ">>> Sestavení a start Quad DSP..."
 docker build -t quadproc . 
 
 # Spuštění - přidal jsem --restart always přímo do dockeru
-docker run -d \
+docker run --init \
   --name quad_dsp \
   --restart always \
   --privileged \
@@ -34,8 +34,3 @@ docker run -d \
   quadproc:latest \
   python3 quadDSP.py --daemon
 
-# Kontrolní smyčka pro logy systemd
-while true; do  
-  echo ">>> QuadDSP status: $(docker inspect -f '{{.State.Status}}' quad_dsp)"
-  sleep 3600
-done
